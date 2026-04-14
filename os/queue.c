@@ -27,3 +27,14 @@ int pop_queue(struct queue *q)
 		q->empty = 1;
 	return value;
 }
+
+int push_front_queue(struct queue *q, int value)
+{
+	if (!q->empty && (q->front - 1 + NPROC) % NPROC == q->tail) {
+		panic("queue shouldn't be overflow");
+	}
+	q->empty = 0;
+	q->front = (q->front - 1 + NPROC) % NPROC;
+	q->data[q->front] = value;
+	return 0;
+}
