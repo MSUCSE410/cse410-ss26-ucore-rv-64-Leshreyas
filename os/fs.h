@@ -77,6 +77,7 @@ struct inode;
 
 void fsinit();
 int dirlink(struct inode *, char *, uint);
+int dirunlink(struct inode *, char *, uint);
 struct inode *dirlookup(struct inode *, char *, uint *);
 struct inode *ialloc(uint, short);
 struct inode *idup(struct inode *);
@@ -92,4 +93,14 @@ int readi(struct inode *, int, uint64, uint, uint);
 int writei(struct inode *, int, uint64, uint, uint);
 void itrunc(struct inode *);
 int dirls(struct inode *);
+
+// Stat structure for fstat syscall
+typedef struct {
+	uint64 dev; // 文件所在磁盘驱动器号，不考虑
+	uint64 ino; // inode 文件所在 inode 编号
+	uint32 mode; // 文件类型
+	uint32 nlink; // 硬链接数量，初始为1
+	uint64 pad[7]; // 无需考虑，为了兼容性设计
+} Stat;
+
 #endif //!__FS_H__

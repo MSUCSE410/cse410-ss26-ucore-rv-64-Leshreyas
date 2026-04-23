@@ -114,9 +114,12 @@ struct inode *ialloc(uint dev, short type)
 		if (dip->type == 0) { // a free inode
 			memset(dip, 0, sizeof(*dip));
 			dip->type = type;
+			dip->pad[0] = 1;
 			bwrite(bp);
 			brelse(bp);
-			return iget(dev, inum);
+			struct inode *ip = iget(dev, inum);
+			ip->nlink = 1;
+			return ip;
 		}
 		brelse(bp);
 	}
@@ -137,6 +140,7 @@ void iupdate(struct inode *ip)
 	dip->type = ip->type;
 	dip->size = ip->size;
 	// LAB4: you may need to update link count here
+	dip->pad[0] = ip->nlink;
 	memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
 	bwrite(bp);
 	brelse(bp);
@@ -168,6 +172,7 @@ static struct inode *iget(uint dev, uint inum)
 	ip->inum = inum;
 	ip->ref = 1;
 	ip->valid = 0;
+	ip->nlink = 1;
 	return ip;
 }
 
@@ -190,6 +195,7 @@ void ivalid(struct inode *ip)
 		ip->type = dip->type;
 		ip->size = dip->size;
 		// LAB4: You may need to get lint count here
+		ip->nlink = dip->pad[0];
 		memmove(ip->addrs, dip->addrs, sizeof(ip->addrs));
 		brelse(bp);
 		ip->valid = 1;
@@ -207,8 +213,9 @@ void ivalid(struct inode *ip)
 // case it has to free the inode.
 void iput(struct inode *ip)
 {
+	debugf("iput: dev = %d, inum = %d, ref = %d, nlink = %d\n", ip->dev, ip->inum, ip->ref, ip->nlink);
 	// LAB4: Unmark the condition and change link count variable name (nlink) if needed
-	if (ip->ref == 1 && ip->valid && 0 /*&& ip->nlink == 0*/) {
+	if (ip->ref == 1 && ip->valid && ip->nlink == 0) {
 		// inode has no links and no other references: truncate and free.
 		itrunc(ip);
 		ip->type = 0;
@@ -429,6 +436,29 @@ int dirlink(struct inode *dp, char *name, uint inum)
 }
 
 // LAB4: You may want to add dirunlink here
+int dirunlink(struct inode *dp, char *name, uint inum)
+{
+	uint off;
+	struct dirent de;
+	struct inode *ip;
+
+	debugf("before dirlookup\n");
+	// Check that name is present.
+	if ((ip = dirlookup(dp, name, &off)) == 0) {
+		return -1;
+	}
+	readi(dp, 0, (uint64)&de, off, sizeof(de));
+	iput(ip);
+	debugf("passed dirlookup\n");
+	// strncpy(de.name, "", DIRSIZ);
+	de.inum = 0;
+	debugf("before writei: name = %s, inum = %d\n", de.name, de.inum);
+	if (writei(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
+		return -1;	
+	debugf("after write");
+	// panic("dirlink");
+	return 0;
+}
 
 //Return the inode of the root directory
 struct inode *root_dir()

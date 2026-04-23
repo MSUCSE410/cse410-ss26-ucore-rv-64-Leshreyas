@@ -37,6 +37,19 @@ void proc_init()
 		p->state = UNUSED;
 		p->kstack = (uint64)kstack[p - pool];
 		p->trapframe = (struct trapframe *)trapframe[p - pool];
+	
+		/*
+		* LAB1: you may need to initialize your new fields of proc here
+		*/
+		p->info.status = Running;
+		for (int i = 0; i < MAX_SYSCALL_NUM; i++) 
+		{
+			p->info.syscall_times[i] = 0;
+		}
+		p->info.time = 0;
+		p->priority = 16;
+		p->pass = 65536 / p->priority;
+		p->stride = 0;
 	}
 	idle.kstack = (uint64)boot_stack_top;
 	idle.pid = IDLE_PID;
@@ -57,9 +70,31 @@ struct proc *fetch_task()
 		debugf("No task to fetch\n");
 		return NULL;
 	}
-	debugf("fetch task %d(pid=%d) from task queue\n", index,
-	       pool[index].pid);
-	return pool + index;
+	int least_index = index;
+	// int initial_index = index;
+
+	for (int i = 0; i < QUEUE_SIZE; i++)
+	{
+		index = pop_queue(&task_queue);
+		if (index < 0) 
+		{
+			debugf("Only task\n");
+			return pool + least_index;
+			// push_queue(&task_queue, index);
+			// break;
+		}
+		if(pool[index].stride <= pool[least_index].stride)
+		{
+			push_queue(&task_queue, least_index);
+			least_index = index;
+		} 
+		else
+		{
+			push_queue(&task_queue, index);
+		}
+	}	
+	debugf("fetch task %d(pid=%d) to task queue\n", least_index, pool[least_index].pid);
+	return pool + least_index;
 }
 
 void add_task(struct proc *p)
@@ -138,6 +173,7 @@ void scheduler()
 		}
 		tracef("swtich to proc %d", p - pool);
 		p->state = RUNNING;
+		p->stride += p->pass;
 		current_proc = p;
 		swtch(&idle.context, &p->context);
 	}
