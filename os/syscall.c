@@ -125,7 +125,7 @@ uint64 sys_spawn(uint64 va)
 uint64 sys_set_priority(long long prio){
     // TODO: your job is to complete the sys call
 	struct proc *p = curr_proc();
-	if (prio < 2 || prio > INT_MAX) {
+	if (prio < 2 || prio > LLONG_MAX) {
 		return -1;
 	}
 	p->priority = prio;

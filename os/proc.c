@@ -78,7 +78,7 @@ struct proc *fetch_task()
 			// push_queue(&task_queue, index);
 			// break;
 		}
-		if(pool[index].stride <= pool[least_index].stride)
+		if(pool[index].stride < pool[least_index].stride)
 		{
 			push_queue(&task_queue, least_index);
 			least_index = index;
