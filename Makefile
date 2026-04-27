@@ -93,7 +93,7 @@ build/kernel: $(OBJS) os/kernel.ld
 
 clean:
 	rm -rf $(BUILDDIR) os/initproc.S
-	rm $(F)/*.img
+	rm -rf $(F)/*.img
 
 # BOARD
 BOARD		?= qemu
@@ -133,5 +133,5 @@ CHAPTER ?= $(shell git rev-parse --abbrev-ref HEAD | grep -oP 'ch\K[0-9]')
 user:
 	make -C user CHAPTER=$(CHAPTER) BASE=$(BASE)
 
-test: user run
+test: user clean build run
 
