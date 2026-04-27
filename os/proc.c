@@ -143,6 +143,10 @@ found:
 	p->next_semaphore_id = 0;
 	p->next_condvar_id = 0;
 	// LAB5: (1) you may initialize your new proc variables here
+	p->detection_enabled = 0;
+	memset(p->Available, 0, sizeof(int) * LOCK_POOL_SIZE);
+	memset(p->Allocation, 0, sizeof(int) * LOCK_POOL_SIZE * NTHREAD);
+	memset(p->Request, 0, sizeof(int) * LOCK_POOL_SIZE * NTHREAD);
 	return p;
 }
 
