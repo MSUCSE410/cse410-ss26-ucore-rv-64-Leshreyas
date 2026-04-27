@@ -62,9 +62,9 @@ struct proc {
 	* LAB1: you may need to add some new fields here
 	*/
 	struct TaskInfo info;
-	uint64 stride; 
-    uint64 pass;
-    uint64 priority;
+	long long stride; 
+    long long pass;
+    long long priority;
 };
 
 int cpuid();
