@@ -113,6 +113,10 @@ uint64 sys_spawn(uint64 va)
 	np->trapframe->a0 = 0;
 	np->parent = p;
 	np->state = RUNNABLE;
+	np->priority = 16;
+	np->pass = 65536 / np->priority;
+	np->stride = p->stride;
+
 	uvmunmap(np->pagetable, 0, np->max_page, 1);
 	np->max_page = 0;
 	loader(id, np);
